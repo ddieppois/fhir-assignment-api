@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class FhirPatientService {
@@ -137,10 +134,11 @@ public class FhirPatientService {
         if (response.getNote() != null) {
             Annotation note = new Annotation();
             note.setText(response.getNote());
-            allergy.addNote(note);
+            allergy.setNote(List.of(note));
         }
 
         if (response.getReactions() != null) {
+            List<AllergyIntolerance.AllergyIntoleranceReactionComponent> reactionList = new ArrayList<>();
             for (ReactionDetails reactionDetail : response.getReactions()) {
                 AllergyIntolerance.AllergyIntoleranceReactionComponent reaction = new AllergyIntolerance.AllergyIntoleranceReactionComponent();
 
@@ -166,8 +164,9 @@ public class FhirPatientService {
                     reaction.setDescription(reactionDetail.getDescription());
                 }
 
-                allergy.addReaction(reaction);
+                reactionList.add(reaction);
             }
+            allergy.setReaction(reactionList);
         }
 
         return allergy;
