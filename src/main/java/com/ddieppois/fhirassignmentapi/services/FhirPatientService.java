@@ -51,17 +51,27 @@ public class FhirPatientService {
     }
 
     public List<AllergyIntolerance> getAllergiesForPatient(String patientId) {
-        Bundle bundle = fhirClientService.getClient().
-                search()
+        List<AllergyIntolerance> allergies = new ArrayList<>();
+        IGenericClient client = fhirClientService.getClient();
+
+        Bundle bundle = client
+                .search()
                 .forResource(AllergyIntolerance.class)
                 .where(AllergyIntolerance.PATIENT.hasId(patientId))
                 .returnBundle(Bundle.class)
                 .execute();
 
-        List<AllergyIntolerance> allergies = new ArrayList<>();
-        for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-            allergies.add((AllergyIntolerance) entry.getResource());
+        while (bundle != null && !bundle.getEntry().isEmpty()) {
+            for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+                allergies.add((AllergyIntolerance) entry.getResource());
+            }
+
+            // Check if there's a next page to fetch
+            bundle = bundle.getLink(Bundle.LINK_NEXT) != null
+                    ? client.loadPage().next(bundle).execute()
+                    : null;
         }
+
         return allergies;
     }
 
